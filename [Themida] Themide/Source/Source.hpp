@@ -9,7 +9,6 @@
 #define ArraySize(array) sizeof(array) / sizeof(array[0])
 #define Error(Message) MessageBoxA(NULL, Message, "Themidie", MB_ICONERROR);
 #define Warning(Message) MessageBoxA(NULL, Message, "Themidie", MB_ICONWARNING);
-#define DLL_EXPORT extern "C" __declspec(dllexport)
 
 /* shell32.dll */
 using SHGetFileInfoA_t = DWORD_PTR(*)(LPCSTR pszPath, DWORD dwFileAttributes, SHFILEINFOA* psfi, UINT cbFileInfo, UINT uFlags);

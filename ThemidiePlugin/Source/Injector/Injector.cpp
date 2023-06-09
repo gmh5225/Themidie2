@@ -4,24 +4,22 @@
 #include <psapi.h>
 #include <thread>
 
-//#include "..\ntdll.h"
-
 #define Error(Message) MessageBoxA(NULL, Message, "Themidie", MB_ICONERROR);
 #define Warning(Message) MessageBoxA(NULL, Message, "Themidie", MB_ICONWARNING);
 
-bool GetDirectoryFromFileName(LPCSTR FileDirectory, LPCSTR WantedDirectory, LPCSTR Output)
+bool GetDirectoryFromFileName(LPCSTR FileDirectory, LPCSTR WantedDirectory, char Output[MAX_PATH])
 {
 	for (int64_t i = strlen(FileDirectory) - 1; i > 0; i--)
 	{
 		if (FileDirectory[i] == '\\')
 		{
 			std::string output = "";
-			for (uint64_t i1 = i; i1 < i; i1++)
+			for (uint64_t i1 = 0; i1 < i; i1++)
 			{
 				output = output + FileDirectory[i1];
 			}
-			output = output + WantedDirectory;
-			Output = output.c_str();
+			output = output + "\\" + WantedDirectory;
+			memcpy(Output, output.c_str(), output.length());
 
 			return true;
 		}
@@ -30,10 +28,10 @@ bool GetDirectoryFromFileName(LPCSTR FileDirectory, LPCSTR WantedDirectory, LPCS
 	return false;
 }
 
-bool GetFileFromDirectory(LPCSTR Directory, LPCSTR FileName, LPCSTR Output)
+bool GetFileFromDirectory(LPCSTR Directory, LPCSTR FileName, char Output[MAX_PATH])
 {
 	std::string filepath = Directory;
-	filepath + "\\" + FileName;
+	filepath = filepath + "\\" + FileName;
 
 	WIN32_FIND_DATAA FileInfo = {};
 	if (!FindFirstFileA(filepath.c_str(), &FileInfo))
@@ -41,7 +39,7 @@ bool GetFileFromDirectory(LPCSTR Directory, LPCSTR FileName, LPCSTR Output)
 		return false;
 	}
 
-	Output = filepath.c_str();
+	memcpy(Output, filepath.c_str(), filepath.length());
 	return true;
 }
 
@@ -53,36 +51,27 @@ namespace Injector
 		char plugins[MAX_PATH] = {};
 		char ThemidePath[MAX_PATH] = {};
 
-		AllocConsole();
-		freopen("conin$", "r", stdin);
-		freopen("conout$", "w", stdout);
-		freopen("conout$", "w", stderr);
-
-		if (!GetModuleFileNameA(NULL, x64dbg, MAX_PATH))
+		if (!GetModuleFileNameA(NULL, x64dbg, sizeof(x64dbg)))
 		{
 			Error("Please restart x64dbg and disable plugins possibly interfering");
 			return;
 		}
-		std::cout << x64dbg << std::endl;
 
 		if (!GetDirectoryFromFileName(x64dbg, "plugins", plugins))
 		{
 			Error("This is not loaded inside of x64dbg");
 			return;
 		}
-		std::cout << plugins << std::endl;
 
 		if (!GetFileFromDirectory(plugins, "Themidie.dll", ThemidePath))
 		{
 			Error("Please keep the DLL file named to Themidie.dll to allow it to function properly, restart x64dbg");
 			return;
 		}
-		std::cout << ThemidePath << std::endl;
 
 		STARTUPINFO StartupInfo = {};
 		PROCESS_INFORMATION ProcessInfo = {};
 
-		std::cout << TargetExecutable << std::endl;
 		BOOL Result = CreateProcessA(TargetExecutable, NULL, NULL, NULL, false, NORMAL_PRIORITY_CLASS, nullptr, NULL, &StartupInfo, &ProcessInfo);
 		if (!Result)
 		{

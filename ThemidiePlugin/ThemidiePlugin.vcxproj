@@ -18,13 +18,42 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Injector\Injector.cpp" />
+    <ClCompile Include="Source\Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Libraries\pluginsdk\bridgegraph.h" />
+    <ClInclude Include="Libraries\pluginsdk\bridgelist.h" />
+    <ClInclude Include="Libraries\pluginsdk\bridgemain.h" />
+    <ClInclude Include="Libraries\pluginsdk\jansson\jansson.h" />
+    <ClInclude Include="Libraries\pluginsdk\jansson\jansson_config.h" />
+    <ClInclude Include="Libraries\pluginsdk\jansson\jansson_x64dbg.h" />
+    <ClInclude Include="Libraries\pluginsdk\_dbgfunctions.h" />
+    <ClInclude Include="Libraries\pluginsdk\_plugins.h" />
+    <ClInclude Include="Libraries\pluginsdk\_plugin_types.h" />
+    <ClInclude Include="Source\Injector\Injector.hpp" />
+    <ClInclude Include="Source\resource.h" />
+    <ClInclude Include="Source\Source.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Themidie_X64DBG_PLUGIN.ico" />
+    <Image Include="Themidie_X64DBG_PLUGIN.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Themidie_X64DBG_PLUGIN.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="jansson_x64.lib" />
+    <Library Include="x64bridge.lib" />
+    <Library Include="x64dbg.lib" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{a6e4f4b7-2e4d-434c-9868-4b57fcefbc13}</ProjectGuid>
-    <RootNamespace>ThemidaThemide</RootNamespace>
+    <ProjectGuid>{711900bd-6928-4713-82aa-a83e8516da79}</ProjectGuid>
+    <RootNamespace>ThemidiePlugin</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Themidie</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -75,7 +104,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;THEMIDATHEMIDE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;THEMIDIEPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -92,7 +121,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;THEMIDATHEMIDE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;THEMIDIEPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -109,7 +138,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;THEMIDATHEMIDE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;THEMIDIEPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -126,12 +155,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;THEMIDATHEMIDE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;THEMIDIEPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,39 +167,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(CoreLibraryDependencies);ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;x64dbg.lib;x64bridge.lib;jansson_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreLinkEvent>
-      <Command>
-      </Command>
-    </PreLinkEvent>
-    <PostBuildEvent>
-      <Command>
-      </Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Libraries\minhook\buffer.c" />
-    <ClCompile Include="Libraries\minhook\hde\hde32.c" />
-    <ClCompile Include="Libraries\minhook\hde\hde64.c" />
-    <ClCompile Include="Libraries\minhook\hook.c" />
-    <ClCompile Include="Libraries\minhook\trampoline.c" />
-    <ClCompile Include="Source\Hooks\Hooks.cpp" />
-    <ClCompile Include="Source\Source.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Libraries\minhook\buffer.h" />
-    <ClInclude Include="Libraries\minhook\hde\hde32.h" />
-    <ClInclude Include="Libraries\minhook\hde\hde64.h" />
-    <ClInclude Include="Libraries\minhook\hde\pstdint.h" />
-    <ClInclude Include="Libraries\minhook\hde\table32.h" />
-    <ClInclude Include="Libraries\minhook\hde\table64.h" />
-    <ClInclude Include="Libraries\minhook\MinHook.h" />
-    <ClInclude Include="Libraries\minhook\trampoline.h" />
-    <ClInclude Include="Source\Hooks\Hooks.hpp" />
-    <ClInclude Include="Source\ntdll.h" />
-    <ClInclude Include="Source\Source.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
