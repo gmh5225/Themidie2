@@ -353,11 +353,11 @@ namespace Hooks
 		PVOID RegQueryValueExA = GetProcAddress(KernelBase, "RegQueryValueExA");
 		PVOID RegQueryValueExW = GetProcAddress(KernelBase, "RegQueryValueExW");
 		PVOID GetModuleHandleA = GetProcAddress(KernelBase, "GetModuleHandleA");
+		PVOID FindWindowA = GetProcAddress(user32, "FindWindowA");
+		PVOID FindWindowW = GetProcAddress(user32, "FindWindowW");
+		PVOID Process32NextW = GetProcAddress(Kernel32, "Process32NextW");
 		PVOID NtSetInformationThread = GetProcAddress(ntdll, "NtSetInformationThread");
 		PVOID NtQueryVirtualMemory = GetProcAddress(ntdll, "NtQueryVirtualMemory");
-		PVOID FindWindowA = GetProcAddress(ntdll, "FindWindowA");
-		PVOID FindWindowW = GetProcAddress(ntdll, "FindWindowW");
-		PVOID Process32NextW = GetProcAddress(Kernel32, "Process32NextW");
 
 		uint64_t Fails = 0;
 
@@ -370,11 +370,11 @@ namespace Hooks
 		if (MH_CreateHook(RegQueryValueExA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA)) Fails++;
 		if (MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW)) Fails++;
 		if (MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA)) Fails++;
-		if (MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread)) Fails++;
-		if (MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory)) Fails++;
 		if (MH_CreateHook(FindWindowA, FindWindowAHook, (void**)&Hooks::FindWindowA)) Fails++;
 		if (MH_CreateHook(FindWindowW, FindWindowWHook, (void**)&Hooks::FindWindowW)) Fails++;
 		if (MH_CreateHook(Process32NextW, Process32NextWHook, (void**)&Hooks::Process32NextW)) Fails++;
+		if (MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread)) Fails++;
+		if (MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory)) Fails++;
 		if (MH_EnableHook(MH_ALL_HOOKS)) Fails++;
 
 		if (Fails > 0)
