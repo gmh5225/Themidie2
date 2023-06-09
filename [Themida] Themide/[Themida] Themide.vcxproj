@@ -130,6 +130,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -137,8 +139,16 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(CoreLibraryDependencies);ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);ntdll.lib;x64dbg.lib;x64bridge.lib;jansson_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreLinkEvent>
+      <Command>
+      </Command>
+    </PreLinkEvent>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\minhook\buffer.c" />
@@ -159,10 +169,27 @@
     <ClInclude Include="Libraries\minhook\hde\table64.h" />
     <ClInclude Include="Libraries\minhook\MinHook.h" />
     <ClInclude Include="Libraries\minhook\trampoline.h" />
+    <ClInclude Include="Libraries\pluginsdk\bridgegraph.h" />
+    <ClInclude Include="Libraries\pluginsdk\bridgelist.h" />
+    <ClInclude Include="Libraries\pluginsdk\bridgemain.h" />
+    <ClInclude Include="Libraries\pluginsdk\jansson\jansson.h" />
+    <ClInclude Include="Libraries\pluginsdk\jansson\jansson_config.h" />
+    <ClInclude Include="Libraries\pluginsdk\jansson\jansson_x64dbg.h" />
+    <ClInclude Include="Libraries\pluginsdk\_dbgfunctions.h" />
+    <ClInclude Include="Libraries\pluginsdk\_plugins.h" />
+    <ClInclude Include="Libraries\pluginsdk\_plugin_types.h" />
     <ClInclude Include="Source\Hooks\Hooks.hpp" />
     <ClInclude Include="Source\Injector\Injector.hpp" />
     <ClInclude Include="Source\ntdll.h" />
+    <ClInclude Include="Source\resource.h" />
     <ClInclude Include="Source\Source.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Themidie_X64DBG_PLUGIN.ico" />
+    <Image Include="Themidie_X64DBG_PLUGIN.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Themidie_X64DBG_PLUGIN.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

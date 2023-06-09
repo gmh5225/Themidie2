@@ -362,22 +362,24 @@ namespace Hooks
 		uint64_t Fails = 0;
 
 		if (MH_CreateHook(SHGetFileInfoA, SHGetFileInfoAHook, (void**)&Hooks::SHGetFileInfoA)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, SHGetFileInfoWHook, (void**)&Hooks::SHGetFileInfoW)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, ExtractIconWHook, (void**)&Hooks::ExtractIconW)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, ExtractIconExWHook, (void**)&Hooks::ExtractIconExW)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, FindWindowAHook, (void**)&Hooks::FindWindowA)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoA, FindWindowWHook, (void**)&Hooks::FindWindowW)) Fails++;
+		if (MH_CreateHook(SHGetFileInfoW, SHGetFileInfoWHook, (void**)&Hooks::SHGetFileInfoW)) Fails++;
+		if (MH_CreateHook(ExtractIconW, ExtractIconWHook, (void**)&Hooks::ExtractIconW)) Fails++;
+		if (MH_CreateHook(ExtractIconExW, ExtractIconExWHook, (void**)&Hooks::ExtractIconExW)) Fails++;
+		if (MH_CreateHook(RegOpenKeyExA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA)) Fails++;
+		if (MH_CreateHook(RegOpenKeyExW, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW)) Fails++;
+		if (MH_CreateHook(RegQueryValueExA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA)) Fails++;
+		if (MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW)) Fails++;
+		if (MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA)) Fails++;
+		if (MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread)) Fails++;
+		if (MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory)) Fails++;
+		if (MH_CreateHook(FindWindowA, FindWindowAHook, (void**)&Hooks::FindWindowA)) Fails++;
+		if (MH_CreateHook(FindWindowW, FindWindowWHook, (void**)&Hooks::FindWindowW)) Fails++;
+		if (MH_CreateHook(Process32NextW, Process32NextWHook, (void**)&Hooks::Process32NextW)) Fails++;
+		if (MH_EnableHook(MH_ALL_HOOKS)) Fails++;
 
 		if (Fails > 0)
 		{
-			Warning("Some functions are not loaded or are protected");
+			Warning("Some functions are not loaded or are protected")
 			return false;
 		}
 

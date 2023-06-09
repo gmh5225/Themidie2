@@ -45,51 +45,44 @@ bool GetFileFromDirectory(LPCSTR Directory, LPCSTR FileName, LPCSTR Output)
 	return true;
 }
 
-void GetPathFromExplorer(LPCSTR PathChosen)
-{
-	char ChosenFile[MAX_PATH] = {};
-
-	OPENFILENAMEA ExplorerInfo = {};
-	ExplorerInfo.lStructSize = sizeof(ExplorerInfo);
-	ExplorerInfo.lpstrFilter = "Executable Files (*.exe*)\0*.exe*\0";
-	ExplorerInfo.lpstrFile = ChosenFile;
-	ExplorerInfo.nMaxFile = sizeof(ChosenFile);
-	ExplorerInfo.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-	ExplorerInfo.lpstrDefExt = "";
-
-	GetOpenFileNameA(&ExplorerInfo);
-	PathChosen = ChosenFile;
-}
-
 namespace Injector
 {
-	void Inject(LPCSTR TargetExecutable)
+	void InjectOnStartup(LPCSTR TargetExecutable)
 	{
 		char x64dbg[MAX_PATH] = {};
 		char plugins[MAX_PATH] = {};
 		char ThemidePath[MAX_PATH] = {};
+
+		AllocConsole();
+		freopen("conin$", "r", stdin);
+		freopen("conout$", "w", stdout);
+		freopen("conout$", "w", stderr);
 
 		if (!GetModuleFileNameA(NULL, x64dbg, MAX_PATH))
 		{
 			Error("Please restart x64dbg and disable plugins possibly interfering");
 			return;
 		}
+		std::cout << x64dbg << std::endl;
 
 		if (!GetDirectoryFromFileName(x64dbg, "plugins", plugins))
 		{
 			Error("This is not loaded inside of x64dbg");
 			return;
 		}
+		std::cout << plugins << std::endl;
 
 		if (!GetFileFromDirectory(plugins, "Themidie.dll", ThemidePath))
 		{
 			Error("Please keep the DLL file named to Themidie.dll to allow it to function properly, restart x64dbg");
 			return;
 		}
+		std::cout << ThemidePath << std::endl;
 
 		STARTUPINFO StartupInfo = {};
 		PROCESS_INFORMATION ProcessInfo = {};
 
+		std::cout << TargetExecutable << std::endl;
 		BOOL Result = CreateProcessA(TargetExecutable, NULL, NULL, NULL, false, NORMAL_PRIORITY_CLASS, nullptr, NULL, &StartupInfo, &ProcessInfo);
 		if (!Result)
 		{

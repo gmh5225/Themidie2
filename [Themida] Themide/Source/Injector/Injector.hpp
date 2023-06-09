@@ -6,5 +6,5 @@
 
 namespace Injector
 {
-	void Inject(LPCSTR TargetExecutable);
+	void InjectOnStartup(LPCSTR TargetExecutable);
 }
