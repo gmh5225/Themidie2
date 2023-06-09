@@ -1,4 +1,4 @@
-# Themidie2 - The predecessor to Themidie
+# Themidie2 - Educational purposes only
 x64dbg plugin to bypass Themida 3.1.x+ Anti-Debug, VM Detection &amp; Monitoring Software
 
 ## Based off of [Themidie](https://github.com/VenTaz/Themidie)
