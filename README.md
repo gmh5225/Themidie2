@@ -10,7 +10,7 @@ x64dbg plugin to bypass Themida 3.1.x+ Detection Methods (VM, Debug, Monitoring,
 - Hooking Library: [minhook](https://github.com/TsudaKageyu/minhook)
 
 ### Capabilities
-- Bypasses Themida 3.1.x+ Anti-Debug, VM Detection &amp; Monitoring Software Detections
+- Bypasses Themida 3.1.x+ Detection Methods (VM, Debug, Monitoring, Modification & Reversing)
 - Bypasses common methods Anti-Cheat's use to detect Themidie (and the actions it performs)
 
 Themidie2 is still in very early development so its pretty shit rn
