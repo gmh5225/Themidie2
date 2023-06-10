@@ -89,6 +89,12 @@ LPCSTR GoodValues[] = {
 char BadKey[] = "HARDWARE\\ACPI\\DSDT\\VBOX__";
 wchar_t BadKeyW[] = L"HARDWARE\\ACPI\\DSDT\\VBOX__";
 
+HMODULE Shell32 = {};
+HMODULE KernelBase = {};
+HMODULE ntdll = {};
+HMODULE user32 = {};
+HMODULE Kernel32 = {};
+
 uint32_t GetProcessIdByThreadHandle(PVOID Thread)
 {
 	THREAD_BASIC_INFORMATION BasicThreadInformation;
@@ -112,6 +118,7 @@ namespace Hooks
 	RegQueryValueExA_t RegQueryValueExA;
 	RegQueryValueExW_t RegQueryValueExW;
 	GetModuleHandleA_t GetModuleHandleA;
+	LoadLibraryExW_t LoadLibraryExW;
 	NtSetInformationThread_t NtSetInformationThread;
 	NtQueryVirtualMemory_t NtQueryVirtualMemory;
 	FindWindowA_t FindWindowA;
@@ -180,10 +187,7 @@ namespace Hooks
 			}
 		}
 
-		if (wcsstr(lpSubKey, BadKeyW))
-		{
-			return 1;
-		}
+		if (wcsstr(lpSubKey, BadKeyW)) return 1;
 
 		return RegOpenKeyExW(hKey, lpSubKey, ulOptions, samDesired, phkResult);
 	}
@@ -197,11 +201,7 @@ namespace Hooks
 				return 0;
 			}
 		}
-
-		if (strstr(lpSubKey, BadKey))
-		{
-			return 1;
-		}
+		if (strstr(lpSubKey, BadKey)) return 1;
 
 		return RegOpenKeyExA(hKey, lpSubKey, ulOptions, samDesired, phkResult);
 	}
@@ -215,6 +215,7 @@ namespace Hooks
 				return 0;
 			}
 		}
+		if (strstr(lpValueName, BadKey)) return 1;
 
 		return RegQueryValueExA(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
 	}
@@ -228,6 +229,7 @@ namespace Hooks
 				return 0;
 			}
 		}
+		if (wcsstr(lpValueName, BadKeyW)) return 1;
 
 		return RegQueryValueExW(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
 	}
@@ -335,51 +337,150 @@ namespace Hooks
 		return NtQueryVirtualMemory(ProcessHandle, BaseAddress, MemoryInformationClass, MemoryInformation, MemoryInformationLength, ReturnLength);
 	}
 
+	HMODULE LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
+	{
+		if (_wcsicmp(lpLibFileName, L"shell32.dll") && !Shell32)
+		{
+			Shell32 = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
+			PVOID SHGetFileInfoA = GetProcAddress(Shell32, "SHGetFileInfoA");
+			PVOID SHGetFileInfoW = GetProcAddress(Shell32, "SHGetFileInfoW");
+			PVOID ExtractIconW = GetProcAddress(Shell32, "ExtractIconW");
+			PVOID ExtractIconExW = GetProcAddress(Shell32, "ExtractIconExW");
+
+			MH_CreateHook(SHGetFileInfoA, SHGetFileInfoAHook, (void**)&Hooks::SHGetFileInfoA);
+			MH_CreateHook(SHGetFileInfoW, SHGetFileInfoWHook, (void**)&Hooks::SHGetFileInfoW);
+			MH_CreateHook(ExtractIconW, ExtractIconWHook, (void**)&Hooks::ExtractIconW);
+			MH_CreateHook(ExtractIconExW, ExtractIconExWHook, (void**)&Hooks::ExtractIconExW);
+
+			return Shell32;
+		}
+
+		if (_wcsicmp(lpLibFileName, L"kernelbase.dll") && !KernelBase)
+		{
+			KernelBase = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
+			PVOID RegOpenKeyExW = GetProcAddress(KernelBase, "RegOpenKeyExW");
+			PVOID RegOpenKeyExA = GetProcAddress(KernelBase, "RegOpenKeyExA");
+			PVOID RegQueryValueExA = GetProcAddress(KernelBase, "RegQueryValueExA");
+			PVOID RegQueryValueExW = GetProcAddress(KernelBase, "RegQueryValueExW");
+			PVOID GetModuleHandleA = GetProcAddress(KernelBase, "GetModuleHandleA");
+
+			MH_CreateHook(RegOpenKeyExA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA);
+			MH_CreateHook(RegOpenKeyExW, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW);
+			MH_CreateHook(RegQueryValueExA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA);
+			MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW);
+			MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA);
+
+			return KernelBase;
+		}	
+
+		if (_wcsicmp(lpLibFileName, L"user32.dll") && !user32)
+		{
+			user32 = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
+			PVOID FindWindowA = GetProcAddress(user32, "FindWindowA");
+			PVOID FindWindowW = GetProcAddress(user32, "FindWindowW");
+
+			MH_CreateHook(FindWindowA, FindWindowAHook, (void**)&Hooks::FindWindowA);
+			MH_CreateHook(FindWindowW, FindWindowWHook, (void**)&Hooks::FindWindowW);
+
+			return user32;
+		}
+
+		if (_wcsicmp(lpLibFileName, L"kernel32.dll") && !Kernel32)
+		{
+			Kernel32 = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
+			PVOID Process32NextW = GetProcAddress(Kernel32, "Process32NextW");
+			MH_CreateHook(Process32NextW, Process32NextWHook, (void**)&Hooks::Process32NextW);
+
+			return Kernel32;
+		}
+
+		if (_wcsicmp(lpLibFileName, L"ntdll.dll") && !ntdll)
+		{
+			ntdll = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
+			PVOID NtSetInformationThread = GetProcAddress(ntdll, "NtSetInformationThread");
+			PVOID NtQueryVirtualMemory = GetProcAddress(ntdll, "NtQueryVirtualMemory");
+
+			MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread);
+			MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory);
+
+			return ntdll;
+		}
+
+		return LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+	}
+
 	// to avoid problems with headers
 	bool Initalize()
 	{
-		HMODULE Shell32 = ::GetModuleHandleA("shell32.dll");
-		HMODULE KernelBase = ::GetModuleHandleA("kernelbase.dll");
-		HMODULE ntdll = ::GetModuleHandleA("ntdll.dll");
-		HMODULE user32 = ::GetModuleHandleA("user32.dll");
-		HMODULE Kernel32 = ::GetModuleHandleA("kernel32.dll");
-
-		PVOID SHGetFileInfoA = GetProcAddress(Shell32, "SHGetFileInfoA");
-		PVOID SHGetFileInfoW = GetProcAddress(Shell32, "SHGetFileInfoW");
-		PVOID ExtractIconW = GetProcAddress(Shell32, "ExtractIconW");
-		PVOID ExtractIconExW = GetProcAddress(Shell32, "ExtractIconExW");
-		PVOID RegOpenKeyExW = GetProcAddress(KernelBase, "RegOpenKeyExW");
-		PVOID RegOpenKeyExA = GetProcAddress(KernelBase, "RegOpenKeyExA");
-		PVOID RegQueryValueExA = GetProcAddress(KernelBase, "RegQueryValueExA");
-		PVOID RegQueryValueExW = GetProcAddress(KernelBase, "RegQueryValueExW");
-		PVOID GetModuleHandleA = GetProcAddress(KernelBase, "GetModuleHandleA");
-		PVOID FindWindowA = GetProcAddress(user32, "FindWindowA");
-		PVOID FindWindowW = GetProcAddress(user32, "FindWindowW");
-		PVOID Process32NextW = GetProcAddress(Kernel32, "Process32NextW");
-		PVOID NtSetInformationThread = GetProcAddress(ntdll, "NtSetInformationThread");
-		PVOID NtQueryVirtualMemory = GetProcAddress(ntdll, "NtQueryVirtualMemory");
+		Shell32 = ::GetModuleHandleA("shell32.dll");
+		KernelBase = ::GetModuleHandleA("kernelbase.dll");
+		ntdll = ::GetModuleHandleA("ntdll.dll");
+		user32 = ::GetModuleHandleA("user32.dll");
+		Kernel32 = ::GetModuleHandleA("kernel32.dll");
 
 		uint64_t Fails = 0;
 
-		if (MH_CreateHook(SHGetFileInfoA, SHGetFileInfoAHook, (void**)&Hooks::SHGetFileInfoA)) Fails++;
-		if (MH_CreateHook(SHGetFileInfoW, SHGetFileInfoWHook, (void**)&Hooks::SHGetFileInfoW)) Fails++;
-		if (MH_CreateHook(ExtractIconW, ExtractIconWHook, (void**)&Hooks::ExtractIconW)) Fails++;
-		if (MH_CreateHook(ExtractIconExW, ExtractIconExWHook, (void**)&Hooks::ExtractIconExW)) Fails++;
-		if (MH_CreateHook(RegOpenKeyExA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA)) Fails++;
-		if (MH_CreateHook(RegOpenKeyExW, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW)) Fails++;
-		if (MH_CreateHook(RegQueryValueExA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA)) Fails++;
-		if (MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW)) Fails++;
-		if (MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA)) Fails++;
-		if (MH_CreateHook(FindWindowA, FindWindowAHook, (void**)&Hooks::FindWindowA)) Fails++;
-		if (MH_CreateHook(FindWindowW, FindWindowWHook, (void**)&Hooks::FindWindowW)) Fails++;
-		if (MH_CreateHook(Process32NextW, Process32NextWHook, (void**)&Hooks::Process32NextW)) Fails++;
-		if (MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread)) Fails++;
-		if (MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory)) Fails++;
-		if (MH_EnableHook(MH_ALL_HOOKS)) Fails++;
+		if (Shell32)
+		{
+			PVOID SHGetFileInfoA = GetProcAddress(Shell32, "SHGetFileInfoA");
+			PVOID SHGetFileInfoW = GetProcAddress(Shell32, "SHGetFileInfoW");
+			PVOID ExtractIconW = GetProcAddress(Shell32, "ExtractIconW");
+			PVOID ExtractIconExW = GetProcAddress(Shell32, "ExtractIconExW");
 
+			if (MH_CreateHook(SHGetFileInfoA, SHGetFileInfoAHook, (void**)&Hooks::SHGetFileInfoA)) Fails++;
+			if (MH_CreateHook(SHGetFileInfoW, SHGetFileInfoWHook, (void**)&Hooks::SHGetFileInfoW)) Fails++;
+			if (MH_CreateHook(ExtractIconW, ExtractIconWHook, (void**)&Hooks::ExtractIconW)) Fails++;
+			if (MH_CreateHook(ExtractIconExW, ExtractIconExWHook, (void**)&Hooks::ExtractIconExW)) Fails++;
+		}
+
+		if (KernelBase)
+		{
+			PVOID RegOpenKeyExW = GetProcAddress(KernelBase, "RegOpenKeyExW");
+			PVOID RegOpenKeyExA = GetProcAddress(KernelBase, "RegOpenKeyExA");
+			PVOID RegQueryValueExA = GetProcAddress(KernelBase, "RegQueryValueExA");
+			PVOID RegQueryValueExW = GetProcAddress(KernelBase, "RegQueryValueExW");
+			PVOID GetModuleHandleA = GetProcAddress(KernelBase, "GetModuleHandleA");
+
+			if (MH_CreateHook(RegOpenKeyExA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA)) Fails++;
+			if (MH_CreateHook(RegOpenKeyExW, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW)) Fails++;
+			if (MH_CreateHook(RegQueryValueExA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA)) Fails++;
+			if (MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW)) Fails++;
+			if (MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA)) Fails++;
+		}
+
+		if (user32)
+		{
+			PVOID FindWindowA = GetProcAddress(user32, "FindWindowA");
+			PVOID FindWindowW = GetProcAddress(user32, "FindWindowW");
+
+			if (MH_CreateHook(FindWindowA, FindWindowAHook, (void**)&Hooks::FindWindowA)) Fails++;
+			if (MH_CreateHook(FindWindowW, FindWindowWHook, (void**)&Hooks::FindWindowW)) Fails++;
+		}
+
+		if (Kernel32)
+		{
+			PVOID Process32NextW = GetProcAddress(Kernel32, "Process32NextW");
+			if (MH_CreateHook(Process32NextW, Process32NextWHook, (void**)&Hooks::Process32NextW)) Fails++;
+		}
+
+		if (ntdll)
+		{
+			PVOID NtSetInformationThread = GetProcAddress(ntdll, "NtSetInformationThread");
+			PVOID NtQueryVirtualMemory = GetProcAddress(ntdll, "NtQueryVirtualMemory");
+
+			if (MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread)) Fails++;
+			if (MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory)) Fails++;
+		}
+
+		if (MH_EnableHook(MH_ALL_HOOKS)) Fails++;
 		if (Fails > 0)
 		{
-			Warning("Some functions are not loaded or are protected")
+			Warning("Some functions are protected")
 			return false;
 		}
 

@@ -22,6 +22,7 @@ using RegOpenKeyExA_t = LSTATUS(*)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, 
 using RegQueryValueExA_t = LSTATUS(*)(HKEY hKey, LPCSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE  lpData, LPDWORD lpcbData);
 using RegQueryValueExW_t = LSTATUS(*)(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE  lpData, LPDWORD lpcbData);
 using GetModuleHandleA_t = HMODULE(*)(LPCSTR lpModuleName);
+using LoadLibraryExW_t = HMODULE(*)(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
 
 /* ntdll.dll */
 using NtSetInformationThread_t = NTSTATUS(*)(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength);

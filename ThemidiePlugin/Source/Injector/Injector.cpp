@@ -78,6 +78,7 @@ namespace Injector
 			Error("Could not start patched process, restart x64dbg");
 			return;
 		}
+		SuspendThread(ProcessInfo.hThread);
 
 		HMODULE KernelBase = GetModuleHandleA("kernelbase.dll");
 		if (!KernelBase)
@@ -136,6 +137,7 @@ namespace Injector
 			Warning("Plugins are interfering with Themidie's ability to function, unexpected issues may occur");
 		}
 
+		ResumeThread(ProcessInfo.hThread);
 		CloseHandle(ProcessInfo.hProcess);
 		CloseHandle(ProcessInfo.hThread);
 	}
