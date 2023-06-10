@@ -107,6 +107,26 @@ uint32_t GetProcessIdByThreadHandle(PVOID Thread)
 	return 0;
 }
 
+void RemoveRetardedCharacters(LPCSTR string, uint64_t Size)
+{
+	char* newstring = new char[Size];
+	uint64_t newstringindex = 0;
+
+	for (uint64_t i = 0; i < Size; i++)
+	{
+		if (string[i] != (BYTE)15)
+		{
+			newstring[newstringindex] = string[i];
+			newstringindex++;
+		}
+	}
+
+	for (uint64_t i = 0; i < newstringindex; i++)
+	{
+		((char*)string)[i] = newstring[newstringindex];
+	}
+}
+
 namespace Hooks
 {
 	SHGetFileInfoA_t SHGetFileInfoA;
@@ -220,7 +240,7 @@ namespace Hooks
 		return RegQueryValueExA(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
 	}
 
-	LSTATUS RegQueryValueExWHook(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE  lpData, LPDWORD lpcbData)
+	LSTATUS RegQueryValueExWHook(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
 	{
 		for (uint8_t i = 0; i < ArraySize(GoodKeysW); i++)
 		{
@@ -339,7 +359,12 @@ namespace Hooks
 
 	HMODULE LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 	{
-		if (_wcsicmp(lpLibFileName, L"shell32.dll") && !Shell32)
+		char ModuleName[MAX_PATH] = {};
+
+		wcstombs(ModuleName, lpLibFileName, MAX_PATH);
+		RemoveRetardedCharacters(ModuleName, sizeof(ModuleName));
+
+		if (strcmpi(ModuleName, "shell32.dll"))
 		{
 			Shell32 = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
@@ -353,10 +378,12 @@ namespace Hooks
 			MH_CreateHook(ExtractIconW, ExtractIconWHook, (void**)&Hooks::ExtractIconW);
 			MH_CreateHook(ExtractIconExW, ExtractIconExWHook, (void**)&Hooks::ExtractIconExW);
 
+			MH_EnableHook(MH_ALL_HOOKS);
+
 			return Shell32;
 		}
 
-		if (_wcsicmp(lpLibFileName, L"kernelbase.dll") && !KernelBase)
+		if (strcmpi(ModuleName, "kernelbase.dll") && !KernelBase)
 		{
 			KernelBase = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
@@ -372,10 +399,12 @@ namespace Hooks
 			MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW);
 			MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA);
 
+			MH_EnableHook(MH_ALL_HOOKS);
+
 			return KernelBase;
 		}	
 
-		if (_wcsicmp(lpLibFileName, L"user32.dll") && !user32)
+		if (strcmpi(ModuleName, "user32.dll") && !user32)
 		{
 			user32 = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
@@ -385,20 +414,24 @@ namespace Hooks
 			MH_CreateHook(FindWindowA, FindWindowAHook, (void**)&Hooks::FindWindowA);
 			MH_CreateHook(FindWindowW, FindWindowWHook, (void**)&Hooks::FindWindowW);
 
+			MH_EnableHook(MH_ALL_HOOKS);
+
 			return user32;
 		}
 
-		if (_wcsicmp(lpLibFileName, L"kernel32.dll") && !Kernel32)
+		if (strcmpi(ModuleName, "kernel32.dll") && !Kernel32)
 		{
 			Kernel32 = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
 			PVOID Process32NextW = GetProcAddress(Kernel32, "Process32NextW");
 			MH_CreateHook(Process32NextW, Process32NextWHook, (void**)&Hooks::Process32NextW);
 
+			MH_EnableHook(MH_ALL_HOOKS);
+
 			return Kernel32;
 		}
 
-		if (_wcsicmp(lpLibFileName, L"ntdll.dll") && !ntdll)
+		if (strcmpi(ModuleName, "ntdll.dll") && !ntdll)
 		{
 			ntdll = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
@@ -407,6 +440,8 @@ namespace Hooks
 
 			MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread);
 			MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory);
+
+			MH_EnableHook(MH_ALL_HOOKS);
 
 			return ntdll;
 		}
@@ -445,12 +480,14 @@ namespace Hooks
 			PVOID RegQueryValueExA = GetProcAddress(KernelBase, "RegQueryValueExA");
 			PVOID RegQueryValueExW = GetProcAddress(KernelBase, "RegQueryValueExW");
 			PVOID GetModuleHandleA = GetProcAddress(KernelBase, "GetModuleHandleA");
+			PVOID LoadLibraryExW = GetProcAddress(KernelBase, "LoadLibraryExW");
 
 			if (MH_CreateHook(RegOpenKeyExA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA)) Fails++;
 			if (MH_CreateHook(RegOpenKeyExW, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW)) Fails++;
 			if (MH_CreateHook(RegQueryValueExA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA)) Fails++;
 			if (MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW)) Fails++;
 			if (MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA)) Fails++;
+			if (MH_CreateHook(LoadLibraryExW, LoadLibraryExWHook, (void**)&Hooks::LoadLibraryExW)) Fails++;
 		}
 
 		if (user32)

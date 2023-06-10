@@ -4,7 +4,7 @@
 
 int __stdcall DllMain(HMODULE Module, DWORD CallReason, PVOID)
 {
-	if (CallReason == DLL_PROCESS_ATTACH && !GetModuleHandleA("x64dbg.dll"))
+	if (CallReason == DLL_PROCESS_ATTACH)
 	{
 		LdrDisableThreadCalloutsForDll(Module);
 		MH_Initialize();
