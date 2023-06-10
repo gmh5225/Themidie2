@@ -12,3 +12,5 @@ x64dbg plugin to bypass Themida 3.1.x+ Anti-Debug, VM Detection &amp; Monitoring
 ### Capabilities
 - Bypasses Themida 3.1.x+ Anti-Debug, VM Detection &amp; Monitoring Software Detections
 - Bypasses common methods Anti-Cheat's use to detect Themidie (and the actions it performs)
+
+Themidie2 is still in very early development so its pretty shit rn
