@@ -1,5 +1,5 @@
 # Themidie2 - Educational purposes only
-x64dbg plugin to bypass Themida 3.1.x+ Anti-Debug, VM Detection &amp; Monitoring Software Detections
+x64dbg plugin to bypass Themida 3.1.x+ Detection Methods (VM, Debug, Monitoring, Modification & Reversing)
 
 ## Based off of [Themidie](https://github.com/VenTaz/Themidie)
 - **As of now Themidie does not work on the latest versions of Themida which is why this was created**
