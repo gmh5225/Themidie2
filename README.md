@@ -20,8 +20,6 @@ x86/x64dbg plugin to bypass Themida 3.1.x+ Detection Methods (VM, Debug, Monitor
 | kernel32.dll | [Process32NextW](https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-process32nextw)
 | user32.dll | [FindWindowA](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-findwindowa)
 | user32.dll | [FindWindowW](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-findwindoww)
-| Advapi32.dll | [RegOpenKeyA](https://docs.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regopenkeya) 
-| Advapi32.dll | [RegQueryValueExA](https://docs.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryvalueexa)
 | ntdll.dll | [NtSetInformationThread](https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetinformationthread)
 | ntdll.dll | [NtQueryVirtualMemory](https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryvirtualmemory)
 | shell32.dll | [SHGetFileInfoA](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shgetfileinfoa)
