@@ -349,6 +349,7 @@ namespace Hooks
 			else if (MemoryInformationClass == MemoryMappedFilenameInformation && Calls == 2)
 			{
 				MH_DisableHook(&::GetModuleHandleA);
+				MH_DisableHook(&::NtQueryVirtualMemory);
 				IsLoaded = true;
 				MessageBoxA(0, "The executable is now loaded in the memory. You can attach x64dbg to the target process.", "Themidie", 64L);
 			}
