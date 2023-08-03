@@ -13,7 +13,8 @@ LPCSTR BadWindows[] = {
 	"x32dbg",
 	"Cheat Engine",
 	"Address Scanner",
-	"Scylla"
+	"Scylla",
+	"WinDbg"
 };
 
 LPCWSTR BadWindowsW[] = {
@@ -28,7 +29,8 @@ LPCWSTR BadWindowsW[] = {
 	L"x32dbg",
 	L"Cheat Engine",
 	L"Address Scanner",
-	L"Scylla"
+	L"Scylla",
+	L"WinDbg"
 };
 
 LPCSTR BadModules[] = {
@@ -48,7 +50,10 @@ LPCSTR BadDirectories[] = {
 	"ida.exe",
 	"Address Scanner",
 	"Scylla",
-	"Procmon"
+	"Procmon",
+	"Cheat Engine 7.3",
+	"Cheat Engine",
+	"PROCMON",
 };
 
 // Wide char versions
@@ -62,7 +67,10 @@ LPCWSTR BadDirectoriesW[] = {
 	L"ida.exe",
 	L"Address Scanner",
 	L"Scylla",
-	L"Procmon"
+	L"Procmon",
+	L"Cheat Engine 7.3",
+	L"Cheat Engine",
+	L"PROCMON"
 };
 
 // 0 = Succeded, 1 = Failed (RegOpenKeyA)
@@ -144,6 +152,8 @@ namespace Hooks
 	FindWindowA_t FindWindowA;
 	FindWindowW_t FindWindowW;
 	Process32NextW_t Process32NextW;
+	FindFirstFileExW_t FindFirstFileExW;
+	NtOpenFile_t NtOpenFile;
 
 	DWORD_PTR SHGetFileInfoAHook(LPCSTR pszPath, DWORD dwFileAttributes, SHFILEINFOA* psfi, UINT cbFileInfo, UINT uFlags)
 	{
@@ -151,7 +161,7 @@ namespace Hooks
 		{
 			if (strstr(pszPath, BadDirectories[i]))
 			{
-				pszPath = "C:\\Windows";
+				pszPath = "C:\\Windows\\regedit.exe";
 			}
 		}
 
@@ -164,7 +174,7 @@ namespace Hooks
 		{
 			if (wcsstr(pszPath, BadDirectoriesW[i]))
 			{
-				pszPath = L"C:\\Windows";
+				pszPath = L"C:\\Windows\\regedit.exe";
 			}
 		}
 
@@ -177,7 +187,7 @@ namespace Hooks
 		{
 			if (wcsstr(pszExeFileName, BadDirectoriesW[i]))
 			{
-				pszExeFileName = L"C:\\Windows\\explorer.exe"; // hopefully your pc isnt ruined by some malware and you have explorer
+				pszExeFileName = L"C:\\Windows\\regedit.exe"; // hopefully your pc isnt ruined by some malware and you have regedit
 			}
 		}
 
@@ -190,18 +200,23 @@ namespace Hooks
 		{
 			if (wcsstr(lpszFile, BadDirectoriesW[i]))
 			{
-				lpszFile = L"C:\\Windows\\explorer.exe"; // hopefully your pc isnt ruined by some malware and you have explorer
+				lpszFile = L"C:\\Windows\\regedit.exe"; // hopefully your pc isnt ruined by some malware and you have regedit
 			}
 		}
 
 		return ExtractIconExW(lpszFile, nIconIndex, phiconLarge, phiconSmall, nIcons);
 	}
 
+	HANDLE FindFirstFileExWHook(LPCWSTR lpFileName, FINDEX_INFO_LEVELS fInfoLevelId, LPVOID lpFindFileData, FINDEX_SEARCH_OPS fSearchOp, LPVOID lpSearchFilter, DWORD dwAdditionalFlags)
+	{
+		return FindFirstFileExW(lpFileName, fInfoLevelId, lpFindFileData, fSearchOp, lpSearchFilter, dwAdditionalFlags);
+	}
+
 	LSTATUS RegOpenKeyExWHook(HKEY hKey, LPCWSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult)
 	{
 		for (uint8_t i = 0; i < ArraySize(GoodKeys); i++)
 		{
-			if (wcsstr(lpSubKey, GoodKeysW[i]))
+			if (wcsstr(lpSubKey, GoodKeysW[i]) || !wcscmp(lpSubKey, GoodKeysW[i]))
 			{
 				return 0;
 			}
@@ -216,7 +231,7 @@ namespace Hooks
 	{
 		for (uint8_t i = 0; i < ArraySize(GoodKeys); i++)
 		{
-			if (strstr(lpSubKey, GoodKeys[i]))
+			if (strstr(lpSubKey, GoodKeys[i]) || !strcmp(lpSubKey, GoodKeys[i]))
 			{
 				return 0;
 			}
@@ -230,7 +245,7 @@ namespace Hooks
 	{
 		for (uint8_t i = 0; i < ArraySize(GoodKeys); i++)
 		{
-			if (strstr(lpValueName, GoodKeys[i]))
+			if (strstr(lpValueName, GoodKeys[i]) || !strcmp(lpValueName, GoodKeys[i]))
 			{
 				return 0;
 			}
@@ -244,7 +259,7 @@ namespace Hooks
 	{
 		for (uint8_t i = 0; i < ArraySize(GoodKeysW); i++)
 		{
-			if (wcsstr(lpValueName, GoodKeysW[i]))
+			if (wcsstr(lpValueName, GoodKeysW[i]) || !wcscmp(lpValueName, GoodKeysW[i]))
 			{
 				return 0;
 			}
@@ -258,13 +273,26 @@ namespace Hooks
 	{
 		for (uint8_t i = 0; i < ArraySize(BadModules); i++)
 		{
-			if (strstr(lpModuleName, BadModules[i]))
+			if (strstr(lpModuleName, BadModules[i]) || !strcmp(lpModuleName, BadModules[i]))
 			{
 				return 0;
 			}
 		}
 
 		return GetModuleHandleA(lpModuleName);
+	}
+
+	NTSTATUS NtOpenFileHook(PHANDLE FileHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock, ULONG ShareAccess, ULONG OpenOptions)
+	{
+		for (uint8_t i = 0; i < ArraySize(BadDirectoriesW); i++)
+		{
+			if (wcsstr(ObjectAttributes->ObjectName->Buffer, BadDirectoriesW[i]))
+			{
+				RtlInitUnicodeString(ObjectAttributes->ObjectName, (PWSTR)L"Troilet");
+				return NtOpenFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, ShareAccess, OpenOptions);
+			}
+		}
+		return NtOpenFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, ShareAccess, OpenOptions);
 	}
 
 	NTSTATUS NtSetInformationThreadHook(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength)
@@ -289,7 +317,7 @@ namespace Hooks
 
 		for (uint8_t i = 0; i < ArraySize(BadWindows); i++)
 		{
-			if (strstr(lpClassName, BadWindows[i]) || strstr(lpWindowName, BadWindows[i]))
+			if (strstr(lpClassName, BadWindows[i]) || !strcmp(lpWindowName, BadWindows[i]))
 			{
 				return 0;
 			}
@@ -307,7 +335,7 @@ namespace Hooks
 
 		for (uint8_t i = 0; i < ArraySize(BadWindows); i++)
 		{
-			if (wcsstr(lpClassName, BadWindowsW[i]) || wcsstr(lpWindowName, BadWindowsW[i]))
+			if (wcsstr(lpClassName, BadWindowsW[i]) || !wcscmp(lpWindowName, BadWindowsW[i]))
 			{
 				return 0;
 			}
@@ -319,7 +347,7 @@ namespace Hooks
 	BOOL Process32NextWHook(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 	{
 		BOOL Result = Process32NextW(hSnapshot, lppe);
-		if (!Result)
+		if (!Result || lppe->szExeFile[0] == '\0')
 		{
 			return Result;
 		}
@@ -393,12 +421,14 @@ namespace Hooks
 			PVOID RegQueryValueExA = GetProcAddress(KernelBase, "RegQueryValueExA");
 			PVOID RegQueryValueExW = GetProcAddress(KernelBase, "RegQueryValueExW");
 			PVOID GetModuleHandleA = GetProcAddress(KernelBase, "GetModuleHandleA");
+			PVOID FindFirstFileExW = GetProcAddress(KernelBase, "FindFirstFileExW");
 
 			MH_CreateHook(RegOpenKeyExA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA);
 			MH_CreateHook(RegOpenKeyExW, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW);
 			MH_CreateHook(RegQueryValueExA, RegQueryValueExAHook, (void**)&Hooks::RegQueryValueExA);
 			MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW);
 			MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA);
+			MH_CreateHook(FindFirstFileExW, FindFirstFileExWHook, (void**)&Hooks::FindFirstFileExW);
 
 			MH_EnableHook(MH_ALL_HOOKS);
 
@@ -438,9 +468,11 @@ namespace Hooks
 
 			PVOID NtSetInformationThread = GetProcAddress(ntdll, "NtSetInformationThread");
 			PVOID NtQueryVirtualMemory = GetProcAddress(ntdll, "NtQueryVirtualMemory");
+			PVOID NtOpenFile = GetProcAddress(ntdll, "NtOpenFile");
 
 			MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread);
 			MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory);
+			MH_CreateHook(NtOpenFile, NtOpenFileHook, (void**)&NtOpenFile);
 
 			MH_EnableHook(MH_ALL_HOOKS);
 
@@ -482,6 +514,7 @@ namespace Hooks
 			PVOID RegQueryValueExW = GetProcAddress(KernelBase, "RegQueryValueExW");
 			PVOID GetModuleHandleA = GetProcAddress(KernelBase, "GetModuleHandleA");
 			PVOID LoadLibraryExW = GetProcAddress(KernelBase, "LoadLibraryExW");
+			PVOID FindFirstFileExW = GetProcAddress(KernelBase, "FindFirstFileExW");
 
 			if (MH_CreateHook(RegOpenKeyExA, RegOpenKeyExAHook, (void**)&Hooks::RegOpenKeyExA)) Fails++;
 			if (MH_CreateHook(RegOpenKeyExW, RegOpenKeyExWHook, (void**)&Hooks::RegOpenKeyExW)) Fails++;
@@ -489,6 +522,7 @@ namespace Hooks
 			if (MH_CreateHook(RegQueryValueExW, RegQueryValueExWHook, (void**)&Hooks::RegQueryValueExW)) Fails++;
 			if (MH_CreateHook(GetModuleHandleA, GetModuleHandleAHook, (void**)&Hooks::GetModuleHandleA)) Fails++;
 			if (MH_CreateHook(LoadLibraryExW, LoadLibraryExWHook, (void**)&Hooks::LoadLibraryExW)) Fails++;
+			if (MH_CreateHook(FindFirstFileExW, FindFirstFileExWHook, (void**)&Hooks::FindFirstFileExW)) Fails++;
 		}
 
 		if (user32)
@@ -510,9 +544,11 @@ namespace Hooks
 		{
 			PVOID NtSetInformationThread = GetProcAddress(ntdll, "NtSetInformationThread");
 			PVOID NtQueryVirtualMemory = GetProcAddress(ntdll, "NtQueryVirtualMemory");
+			PVOID NtOpenFile = GetProcAddress(ntdll, "NtOpenFile");
 
 			if (MH_CreateHook(NtSetInformationThread, NtSetInformationThreadHook, (void**)&Hooks::NtSetInformationThread)) Fails++;
 			if (MH_CreateHook(NtQueryVirtualMemory, NtQueryVirtualMemoryHook, (void**)&Hooks::NtQueryVirtualMemory)) Fails++;
+			if (MH_CreateHook(NtOpenFile, NtOpenFileHook, (void**)&Hooks::NtOpenFile)) Fails++;
 		}
 
 		if (MH_EnableHook(MH_ALL_HOOKS)) Fails++;

@@ -23,10 +23,12 @@ using RegQueryValueExA_t = LSTATUS(*)(HKEY hKey, LPCSTR lpValueName, LPDWORD lpR
 using RegQueryValueExW_t = LSTATUS(*)(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE  lpData, LPDWORD lpcbData);
 using GetModuleHandleA_t = HMODULE(*)(LPCSTR lpModuleName);
 using LoadLibraryExW_t = HMODULE(*)(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
+using FindFirstFileExW_t = HANDLE(*)(LPCWSTR lpFileName, FINDEX_INFO_LEVELS fInfoLevelId, LPVOID lpFindFileData, FINDEX_SEARCH_OPS fSearchOp, LPVOID lpSearchFilter, DWORD dwAdditionalFlags);
 
 /* ntdll.dll */
 using NtSetInformationThread_t = NTSTATUS(*)(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength);
 using NtQueryVirtualMemory_t = NTSTATUS(*)(HANDLE ProcessHandle, PVOID BaseAddress, MEMORY_INFORMATION_CLASS MemoryInformationClass, PVOID MemoryInformation, SIZE_T MemoryInformationLength, PSIZE_T ReturnLength);
+using NtOpenFile_t = NTSTATUS(*)(PHANDLE FileHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock, ULONG ShareAccess, ULONG OpenOptions);
 
 /* user32.dll */
 using FindWindowA_t = HWND(*)(LPCSTR lpClassName, LPCSTR lpWindowName);
